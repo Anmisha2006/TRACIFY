@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#090d16">
+    <meta name="description" content="Tracify - Premium progress tracking dashboard with dynamic counters, category grids, Pomodoro, and milestone celebrations to build momentum daily.">
+    <title>Tracify - Track everything and build momentum daily</title>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="style.css?v=3.0.1">
+    <!-- Official Google Identity Services SDK -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+    <!-- Floating Background Gradient Blobs -->
+    <div class="bg-blobs">
+        <div class="bg-blob blob-1"></div>
+        <div class="bg-blob blob-2"></div>
+        <div class="bg-blob blob-3"></div>
+    </div>
+
+    <!-- Interactive Mouse spotlight tracker -->
+    <div id="mouse-glow"></div>
+
+    <!-- Mobile Screen backdrop Drawer overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar(false)"></div>
+
+    <!-- Core App Container -->
+    <div class="app-container">
+
+        <!-- Responsive Dashboard Sidebar Drawer -->
+        <aside class="sidebar" id="sidebar">
+            
+            <!-- Logo Section -->
+            <div class="brand-section">
+                <div class="logo-container">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+                <div class="brand-name">Tracify</div>
+                <span class="brand-badge">v2.0</span>
+            </div>
+            <div class="sidebar-divider"></div>
+
+            <!-- Task Category Tab Bar filters -->
+            <div class="category-filters-container">
+                <span class="filter-heading">Categories</span>
+                <div class="category-pills" id="categoryPills">
+                    <button class="pill active" onclick="setCategoryFilter('all')">All</button>
+                    <button class="pill" onclick="setCategoryFilter('Study')"><i class="fa-solid fa-book"></i> Study</button>
+                    <button class="pill" onclick="setCategoryFilter('Coding')"><i class="fa-solid fa-code"></i> Coding</button>
+                    <button class="pill" onclick="setCategoryFilter('Fitness')"><i class="fa-solid fa-dumbbell"></i> Fitness</button>
+                    <button class="pill" onclick="setCategoryFilter('Work')"><i class="fa-solid fa-briefcase"></i> Work</button>
+                    <button class="pill" onclick="setCategoryFilter('Personal')"><i class="fa-solid fa-user"></i> Self</button>
+                    <button class="pill" onclick="setCategoryFilter('Habit')"><i class="fa-solid fa-repeat"></i> Habit</button>
+                </div>
+            </div>
+            <div class="sidebar-divider"></div>
+
+            <!-- Search Utility -->
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="searchInput" placeholder="Search courses..." oninput="handleSearch()">
+            </div>
+            <div class="sidebar-divider"></div>
+
+            <!-- Task Actions Header -->
+            <div class="sidebar-actions">
+                <button class="btn-add-task" onclick="openModal('add')">
+                    <i class="fa-solid fa-plus"></i> New Course
+                </button>
+                <button class="btn-sort" id="btnSort" onclick="toggleSort()" title="Sort tasks by progress">
+                    <i class="fa-solid fa-arrow-down-wide-short"></i>
+                </button>
+            </div>
+
+            <!-- Archive and Course status tabs -->
+            <div class="course-tab-row">
+                <button class="tab-btn active" id="tabActiveCourses" onclick="toggleArchiveView(false)">Active</button>
+                <button class="tab-btn" id="tabArchivedCourses" onclick="toggleArchiveView(true)">Archived (<span id="archiveCountBadge">0</span>)</button>
+            </div>
+            <div class="sidebar-divider"></div>
+
+            <!-- Task Cards Dynamic scroll area -->
+            <div class="task-list" id="taskList">
+                <!-- Populated dynamically via JS -->
+            </div>
+
+            <!-- User Footer Profile & Theme -->
+            <div class="sidebar-footer">
+                <div class="user-profile" id="userProfileBtn" onclick="openAuthModal()" style="cursor: pointer; padding: 4px; border-radius: 8px; transition: var(--transition-smooth); display: flex; align-items: center; gap: 8px;">
+                    <div class="user-avatar" id="userAvatarBadge" style="background: var(--gradient-cyan-blue); box-shadow: 0 2px 8px rgba(6, 182, 212, 0.3);">GU</div>
+                    <div class="user-info">
+                        <span class="user-name" id="userNameLabel">Guest User</span>
+                        <span class="user-role" id="userRoleLabel">Click to Sign In</span>
+                    </div>
+                </div>
+                <button class="theme-switch" onclick="toggleTheme()" title="Toggle Light/Dark Theme">
+                    <i class="fa-solid fa-moon" id="theme-icon"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Dashboard Viewport -->
+        <main class="main-dashboard">
+
+            <!-- Mobile Header Topbar -->
+            <div class="mobile-topbar">
+                <button class="btn-menu-toggle" onclick="toggleSidebar(true)">
+                    <i class="fa-solid fa-bars-staggered"></i>
+                </button>
+                <div class="brand-name" style="font-size: 1.1rem; margin-right: auto; margin-left: 12px;">Tracify</div>
+                <button class="theme-switch" onclick="toggleTheme()" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                    <i class="fa-solid fa-moon" id="mobile-theme-icon"></i>
+                </button>
+            </div>
+
+            <!-- Dynamic Dashboard Workspace (Swapped with Empty State if no courses exist) -->
+            <div id="dashboardContent" style="display: flex; flex-direction: column; gap: 30px; flex: 1;">
+                
+                <!-- Welcome Title clock card -->
+                <div class="dashboard-header">
+                    <div class="greeting-text">
+                        <h1 id="greetingHeading">Welcome back, Guest User</h1>
+                        <div class="greeting-sub-row">
+                            <p id="greetingSubtitle">Track everything and build momentum daily.</p>
+                            <span class="category-indicator-badge" id="activeCategoryBadge">Study</span>
+                        </div>
+                    </div>
+                    <div class="header-clock">
+                        <div class="clock-time" id="clockTime">12:00 PM</div>
+                        <div class="clock-date" id="clockDate">Monday, 26 May 2026</div>
+                    </div>
+                </div>
+
+                <!-- Custom active course Deadline countdown Alert banner -->
+                <div class="deadline-banner" id="deadlineBanner" style="display: none;">
+                    <div class="deadline-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
+                    <span class="deadline-text" id="deadlineText">Loading deadline remaining days...</span>
+                    <button class="deadline-close" onclick="document.getElementById('deadlineBanner').style.display='none'">&times;</button>
+                </div>
+
+                <!-- Stats counters summary row -->
+                <section class="stats-container">
+                    <!-- Complete count -->
+                    <div class="stats-card card-completed">
+                        <div class="stats-icon-wrapper">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <div class="stats-info">
+                            <span class="stats-label">Items Completed</span>
+                            <span class="stats-value" id="statCompleted">0</span>
+                        </div>
+                    </div>
+                    <!-- Remaining count -->
+                    <div class="stats-card card-remaining">
+                        <div class="stats-icon-wrapper">
+                            <i class="fa-solid fa-hourglass-half"></i>
+                        </div>
+                        <div class="stats-info">
+                            <span class="stats-label">Remaining</span>
+                            <span class="stats-value" id="statRemaining">0</span>
+                        </div>
+                    </div>
+                    <!-- Percentage dynamic -->
+                    <div class="stats-card card-percent">
+                        <div class="stats-icon-wrapper">
+                            <i class="fa-solid fa-chart-simple"></i>
+                        </div>
+                        <div class="stats-info">
+                            <span class="stats-label">Percentage</span>
+                            <span class="stats-value" id="statPercent">0%</span>
+                        </div>
+                    </div>
+                    <!-- Dynamic Missed / Not Done Counter -->
+                    <div class="stats-card card-missed">
+                        <div class="stats-icon-wrapper" style="background: var(--gradient-orange-red); box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                        </div>
+                        <div class="stats-info">
+                            <span class="stats-label">Not Done / Missed</span>
+                            <span class="stats-value" id="statMissed">0</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Primary workspace action cards -->
+                <section class="dashboard-grid-view">
+                    
+                    <!-- SVG Radial progress counter card -->
+                    <div class="interactive-glass-card progress-ring-card">
+                        <h3 class="ring-title" id="ringTaskTitle">General Course</h3>
+                        
+                        <div class="svg-ring-container">
+                            <svg width="160" height="160" viewBox="0 0 160 160">
+                                <circle class="progress-ring-bg" cx="80" cy="80" r="70" stroke-width="8" />
+                                <circle class="progress-ring-indicator" id="progressRingCircle" cx="80" cy="80" r="70" stroke-width="10" />
+                            </svg>
+                            <div class="ring-center-stats">
+                                <span class="ring-percent-value" id="ringPercentText">0%</span>
+                                <span class="ring-fraction-value" id="ringFractionText">0 / 0</span>
+                            </div>
+                        </div>
+
+                        <!-- 4 Progress milestones indicator row -->
+                        <div class="milestones-track">
+                            <div class="milestone-pill" id="milestone25" title="Reach 25% to complete">25%</div>
+                            <div class="milestone-pill" id="milestone50" title="Reach 50% to complete">50%</div>
+                            <div class="milestone-pill" id="milestone75" title="Reach 75% to complete">75%</div>
+                            <div class="milestone-pill" id="milestone100" title="Reach 100% to complete">100%</div>
+                        </div>
+
+                        <button class="ring-reset-btn" onclick="resetActiveCourse()">
+                            <i class="fa-solid fa-rotate-left"></i> Reset Progress
+                        </button>
+                    </div>
+
+                    <!-- Dynamic completion checkbox auto-fit grid -->
+                    <div class="interactive-glass-card tracker-grid-card">
+                        <div class="tracker-grid-header">
+                            <h3 class="grid-title">
+                                <div class="grid-indicator-pill" id="activePill"></div>
+                                Adaptive Completion Matrix
+                            </h3>
+                            <div class="grid-sub-actions">
+                                <button class="quick-complete-btn" onclick="toggleAllGridItems(true)">
+                                    <i class="fa-solid fa-check-double"></i> All
+                                </button>
+                                <button class="quick-complete-btn" onclick="toggleAllGridItems(false)">
+                                    <i class="fa-solid fa-circle-minus"></i> None
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Handles 10 to 500+ circles cleanly via dynamic scroll styles -->
+                        <div class="grid-scroll-limiter">
+                            <div class="interactive-grid" id="interactiveGrid"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Pomodoro timer, session logs, and auto-saving course notepad row -->
+                <section class="productivity-widgets-row">
+                    <!-- Glassmorphic Pomodoro study widget -->
+                    <div class="interactive-glass-card pomodoro-card">
+                        <div class="widget-header">
+                            <i class="fa-solid fa-stopwatch widget-icon"></i>
+                            <span>Pomodoro Focus Timer</span>
+                        </div>
+                        <div class="pomodoro-timer-body">
+                            <!-- SVG small radial timer countdown indicator -->
+                            <div class="timer-countdown-container">
+                                <svg width="110" height="110" viewBox="0 0 110 110">
+                                    <circle class="timer-bg" cx="55" cy="55" r="48" stroke-width="5" fill="none" />
+                                    <circle class="timer-indicator" id="timerIndicatorCircle" cx="55" cy="55" r="48" stroke-width="6" fill="none" />
+                                </svg>
+                                <div class="timer-readout" id="pomodoroTimerText">25:00</div>
+                            </div>
+                            <div class="timer-controls">
+                                <div class="timer-modes">
+                                    <button class="mode-btn active" id="btnFocusMode" onclick="setPomodoroMode('focus')">Focus</button>
+                                    <button class="mode-btn" id="btnBreakMode" onclick="setPomodoroMode('break')">Break</button>
+                                </div>
+                                <div class="timer-action-buttons">
+                                    <button class="timer-btn-primary" id="btnTimerStartPause" onclick="togglePomodoroTimer()">
+                                        <i class="fa-solid fa-play"></i> Start
+                                    </button>
+                                    <button class="timer-btn-reset" onclick="resetPomodoroTimer()">
+                                        <i class="fa-solid fa-rotate-left"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Session tracker logs -->
+                        <div class="study-session-tracker">
+                            <span>Study Log:</span>
+                            <span id="studySessionHours">0.0 hrs focused</span>
+                        </div>
+                    </div>
+
+                    <!-- Auto-saving Course Notes pad -->
+                    <div class="interactive-glass-card notes-card">
+                        <div class="widget-header">
+                            <i class="fa-solid fa-note-sticky widget-icon"></i>
+                            <span>Auto-saving Course Notes</span>
+                            <span class="notes-status-badge" id="notesStatus">Saved</span>
+                        </div>
+                        <textarea class="notes-textarea" id="taskNotesInput" placeholder="Add course links, milestones, references or custom logs here. Changes auto-save as you type..." oninput="handleNotesInput()"></textarea>
+                    </div>
+                </section>
+
+                <!-- Advanced Analytics counters -->
+                <section class="productivity-analytics">
+                    <!-- Day update streaks -->
+                    <div class="analytics-card">
+                        <div class="analytics-header">
+                            <i class="fa-solid fa-fire" style="color: #f97316;"></i>
+                            <span>Daily Streaks</span>
+                        </div>
+                        <div class="streak-display">
+                            <span class="streak-number" id="streakNumberText">0</span>
+                            <div class="streak-meta">
+                                <span>Day Update Streak</span>
+                                <span id="streakTipText">Start logging updates!</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- High Score task -->
+                    <div class="analytics-card">
+                        <div class="analytics-header">
+                            <i class="fa-solid fa-trophy" style="color: #f59e0b;"></i>
+                            <span>Highest Percentage Course</span>
+                        </div>
+                        <div class="metric-mini-chart">
+                            <div class="chart-bar-info">
+                                <span id="analyticsHighScoreTitle">No active tasks</span>
+                                <span id="analyticsHighScoreValue">0%</span>
+                            </div>
+                            <div class="chart-meter-bg">
+                                <div class="chart-meter-fill" id="analyticsHighScoreFill"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recently updated metrics -->
+                    <div class="analytics-card">
+                        <div class="analytics-header">
+                            <i class="fa-solid fa-clock-rotate-left" style="color: #06b6d4;"></i>
+                            <span>Recently Updated</span>
+                        </div>
+                        <div class="recently-updated-info">
+                            <span class="recent-task-title" id="analyticsRecentTitle">None</span>
+                            <span class="recent-task-time" id="analyticsRecentTime">No updates saved yet</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Empty State UI -->
+            <div class="empty-state-view" id="emptyState" style="display: none;">
+                <div class="empty-illustration-area">
+                    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="progress-ring-bg" cx="100" cy="100" r="80" stroke-width="2" stroke="rgba(255,255,255,0.06)" fill="none" />
+                        <circle class="illustration-accent-circle" cx="100" cy="100" r="60" stroke-width="2" />
+                        <circle cx="100" cy="100" r="15" fill="#6366f1" opacity="0.8" />
+                        <path d="M 60,100 Q 100,50 140,100 Q 100,150 60,100" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2" />
+                        <circle cx="60" cy="100" r="4" fill="#06b6d4" />
+                        <circle cx="140" cy="100" r="4" fill="#8b5cf6" />
+                    </svg>
+                </div>
+                <h2 class="empty-state-title">No Active Tracks Found</h2>
+                <p class="empty-state-desc">Establish dynamic syllabus benchmarks, coding spreadsheets, routine targets or gym routines of any step count.</p>
+                <div class="empty-quote-container">
+                    “The secret of getting ahead is getting started.” — Mark Twain
+                </div>
+                <button class="btn-cta-large" onclick="openModal('add')">
+                    <i class="fa-solid fa-rocket"></i> Create Your First Course
+                </button>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Upgrade popup Form modal for course creation -->
+    <div class="modal-overlay" id="taskModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Create New Course</h3>
+                <button class="modal-close-btn" onclick="closeModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="taskForm" onsubmit="handleFormSubmit(event)">
+                    <input type="hidden" id="modalMode" value="add">
+                    <input type="hidden" id="modalTaskId" value="">
+
+                    <!-- Floating label inputs for premium styling -->
+                    <div class="form-group">
+                        <label for="taskNameInput">Course/Task Name</label>
+                        <input type="text" id="taskNameInput" class="form-input" placeholder="e.g. Data Structures & Algorithms" required maxlength="40">
+                    </div>
+
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label for="taskCountInput">Total Milestone Count</label>
+                            <input type="number" id="taskCountInput" class="form-input" placeholder="e.g. 150" required min="1" max="1000" value="50">
+                        </div>
+                        <div class="form-group">
+                            <label for="taskCategorySelect">Category</label>
+                            <select id="taskCategorySelect" class="form-input">
+                                <option value="Study">Study</option>
+                                <option value="Coding">Coding</option>
+                                <option value="Fitness">Fitness</option>
+                                <option value="Work">Work</option>
+                                <option value="Personal">Personal</option>
+                                <option value="Habit">Habit</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="taskDeadlineInput">Target Deadline (Optional)</label>
+                        <input type="date" id="taskDeadlineInput" class="form-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Gradient Palette Theme</label>
+                        <div class="color-picker-grid">
+                            <div class="color-option option-purple-indigo selected" data-gradient="var(--gradient-purple-indigo)" data-glow="#8b5cf6" onclick="selectColorTheme(this)"></div>
+                            <div class="color-option option-cyan-blue" data-gradient="var(--gradient-cyan-blue)" data-glow="#06b6d4" onclick="selectColorTheme(this)"></div>
+                            <div class="color-option option-emerald-green" data-gradient="var(--gradient-emerald-green)" data-glow="#10b981" onclick="selectColorTheme(this)"></div>
+                            <div class="color-option option-orange-red" data-gradient="var(--gradient-orange-red)" data-glow="#f97316" onclick="selectColorTheme(this)"></div>
+                            <div class="color-option option-rose-pink" data-gradient="var(--gradient-rose-pink)" data-glow="#ec4899" onclick="selectColorTheme(this)"></div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn-modal btn-modal-cancel" onclick="closeModal()">Cancel</button>
+                        <button type="submit" class="btn-modal btn-modal-submit" id="btnSubmit">Create Course</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sleek Auth Modal for Simulated Accounts -->
+    <div class="modal-overlay" id="authModal">
+        <div class="modal-card auth-modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title" id="authModalTitle">Sign In to Tracify</h3>
+                <button class="modal-close-btn" onclick="closeAuthModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                
+                <!-- View 1: Login Form -->
+                <form id="loginForm" onsubmit="handleLoginSubmit(event)" style="display: flex; flex-direction: column; gap: 16px;">
+                    <div class="form-group">
+                        <label for="loginUsername">Username or Email</label>
+                        <input type="text" id="loginUsername" class="form-input" placeholder="e.g. guest_user" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn-modal btn-modal-submit" style="width: 100%; margin-top: 10px;">Sign In</button>
+                    
+                    <div style="display: flex; align-items: center; margin: 6px 0; gap: 10px;">
+                        <div style="flex: 1; height: 1px; background: var(--glass-border);"></div>
+                        <span style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 600; letter-spacing: 0.5px;">or</span>
+                        <div style="flex: 1; height: 1px; background: var(--glass-border);"></div>
+                    </div>
+                    
+                    <button type="button" onclick="handleGoogleSignIn()" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 11px; border-radius: 10px; border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-primary); font-family: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: var(--transition-smooth); box-shadow: var(--inner-glow);">
+                        <svg width="18" height="18" viewBox="0 0 18 18">
+                            <path d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.47h4.84c-.21 1.12-.84 2.07-1.79 2.7l2.78 2.16c1.63-1.5 2.57-3.71 2.57-6.49z" fill="#4285F4"/>
+                            <path d="M9 18c2.43 0 4.47-.8 5.96-2.2l-2.78-2.16c-.77.52-1.76.83-2.85.83-2.2 0-4.06-1.49-4.73-3.49H1.67v2.23C3.15 16.13 5.86 18 9 18z" fill="#34A853"/>
+                            <path d="M4.27 10.98c-.17-.52-.27-1.07-.27-1.64s.1-1.12.27-1.64V5.47H1.67C1.08 6.65.75 7.99.75 9.4c0 1.41.33 2.75.92 3.93l2.6-2.35z" fill="#FBBC05"/>
+                            <path d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59C13.46 1.05 11.42.6 9 .6 5.86.6 3.15 2.47 1.67 5.47l2.6 2.35C4.94 5.07 6.8 3.58 9 3.58z" fill="#EA4335"/>
+                        </svg>
+                        Continue with Google
+                    </button>
+
+                    <div style="text-align: center; margin-top: 12px; font-size: 0.8rem; color: var(--text-secondary);">
+                        Don't have an account? <a href="#" onclick="switchAuthView('register')" style="color: #8b5cf6; font-weight: 600; text-decoration: none;">Create one here</a>
+                    </div>
+                </form>
+
+                <!-- View 2: Register Form -->
+                <form id="registerForm" onsubmit="handleRegisterSubmit(event)" style="display: none; flex-direction: column; gap: 16px;">
+                    <div class="form-group">
+                        <label for="regFullName">Full Name</label>
+                        <input type="text" id="regFullName" class="form-input" placeholder="e.g. John Doe" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="regUsername">Username</label>
+                        <input type="text" id="regUsername" class="form-input" placeholder="e.g. john_doe" required maxlength="15" pattern="^[a-zA-Z0-9_]+$">
+                    </div>
+                    <div class="form-group">
+                        <label for="regEmail">Email Address</label>
+                        <input type="email" id="regEmail" class="form-input" placeholder="e.g. john@tracify.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="regPassword">Password</label>
+                        <input type="password" id="regPassword" class="form-input" placeholder="••••••••" required minlength="4">
+                    </div>
+                    <button type="submit" class="btn-modal btn-modal-submit" style="width: 100%; margin-top: 10px;">Create Account</button>
+                    
+                    <div style="display: flex; align-items: center; margin: 6px 0; gap: 10px;">
+                        <div style="flex: 1; height: 1px; background: var(--glass-border);"></div>
+                        <span style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 600; letter-spacing: 0.5px;">or</span>
+                        <div style="flex: 1; height: 1px; background: var(--glass-border);"></div>
+                    </div>
+
+                    <button type="button" onclick="handleGoogleSignIn()" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 11px; border-radius: 10px; border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-primary); font-family: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: var(--transition-smooth); box-shadow: var(--inner-glow);">
+                        <svg width="18" height="18" viewBox="0 0 18 18">
+                            <path d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.47h4.84c-.21 1.12-.84 2.07-1.79 2.7l2.78 2.16c1.63-1.5 2.57-3.71 2.57-6.49z" fill="#4285F4"/>
+                            <path d="M9 18c2.43 0 4.47-.8 5.96-2.2l-2.78-2.16c-.77.52-1.76.83-2.85.83-2.2 0-4.06-1.49-4.73-3.49H1.67v2.23C3.15 16.13 5.86 18 9 18z" fill="#34A853"/>
+                            <path d="M4.27 10.98c-.17-.52-.27-1.07-.27-1.64s.1-1.12.27-1.64V5.47H1.67C1.08 6.65.75 7.99.75 9.4c0 1.41.33 2.75.92 3.93l2.6-2.35z" fill="#FBBC05"/>
+                            <path d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59C13.46 1.05 11.42.6 9 .6 5.86.6 3.15 2.47 1.67 5.47l2.6 2.35C4.94 5.07 6.8 3.58 9 3.58z" fill="#EA4335"/>
+                        </svg>
+                        Sign Up with Google
+                    </button>
+
+                    <div style="text-align: center; margin-top: 12px; font-size: 0.8rem; color: var(--text-secondary);">
+                        Already have an account? <a href="#" onclick="switchAuthView('login')" style="color: #8b5cf6; font-weight: 600; text-decoration: none;">Sign In here</a>
+                    </div>
+                </form>
+
+                <!-- View 3: Profile Dashboard (Logged In) -->
+                <div id="profileDashboardView" style="display: none; flex-direction: column; gap: 20px; align-items: center; text-align: center;">
+                    <div class="user-avatar" id="profileDashboardAvatar" style="width: 72px; height: 72px; font-size: 1.8rem; border-radius: 50%; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); margin-bottom: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; background: var(--gradient-cyan-blue);">GU</div>
+                    <div>
+                        <h4 id="profileDashboardName" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">Guest User</h4>
+                        <p id="profileDashboardEmail" style="font-size: 0.8rem; color: var(--text-secondary);">guest@tracify.com</p>
+                    </div>
+                    <div style="display: flex; gap: 20px; width: 100%; justify-content: space-evenly; background: rgba(0, 0, 0, 0.15); padding: 12px; border-radius: 12px; border: 1px solid var(--glass-border); margin: 8px 0;">
+                        <div>
+                            <div id="profileStatStreak" style="font-size: 1.2rem; font-weight: 700; color: #f97316;">0</div>
+                            <div style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 600; letter-spacing: 0.5px;">Active Streak</div>
+                        </div>
+                        <div style="width: 1px; background: var(--glass-border);"></div>
+                        <div>
+                            <div id="profileStatTracks" style="font-size: 1.2rem; font-weight: 700; color: #8b5cf6;">0</div>
+                            <div style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 600; letter-spacing: 0.5px;">Total Tracks</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 12px; width: 100%;">
+                        <button type="button" class="btn-modal btn-modal-cancel" onclick="closeAuthModal()" style="flex: 1;">Close</button>
+                        <button type="button" class="btn-modal btn-modal-submit" onclick="handleLogout()" style="flex: 1; background: var(--gradient-orange-red); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);">Sign Out</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Simulated Google Sign-In Popup Modal -->
+    <div class="modal-overlay" id="googleAuthModal" style="z-index: 10000;">
+        <div class="modal-card" style="max-width: 380px; text-align: center; padding: 30px 24px; background: #ffffff !important; color: #202124 !important; border: 1px solid #dadce0 !important; border-radius: 8px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.15) !important; display: flex; flex-direction: column;">
+            <div style="margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                <svg width="24" height="24" viewBox="0 0 24 24">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.85z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.85c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                <h3 style="font-family: 'Product Sans', 'Roboto', sans-serif; font-size: 1.35rem; font-weight: 500; color: #202124; margin-top: 8px;">Sign in with Google</h3>
+                <p style="font-size: 0.85rem; color: #5f6368;">to continue to Tracify</p>
+            </div>
+            
+            <!-- Google loading spinner -->
+            <div id="googleLoadingSpinner" style="display: none; flex-direction: column; align-items: center; justify-content: center; padding: 30px 0; gap: 16px;">
+                <div class="google-spinner"></div>
+                <span style="font-size: 0.8rem; color: #5f6368;">Signing you in...</span>
+            </div>
+
+            <!-- Google Account List -->
+            <div id="googleAccountsList" style="display: flex; flex-direction: column; gap: 1px; border: 1px solid #dadce0; border-radius: 8px; overflow: hidden; margin-bottom: 24px; background: #ffffff;">
+                
+                <!-- Account 1 -->
+                <div class="google-account-row" onclick="selectGoogleAccount('surat@gmail.com', 'Surat Anmisha')" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; text-align: left; transition: background 0.2s; border-bottom: 1px solid #f1f3f4; background: #ffffff;">
+                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #e8f0fe; color: #1a73e8; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem;">S</div>
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="font-size: 0.85rem; font-weight: 600; color: #3c4043;">Surat Anmisha</span>
+                        <span style="font-size: 0.75rem; color: #5f6368;">surat@gmail.com</span>
+                    </div>
+                </div>
+
+                <!-- Account 2 -->
+                <div class="google-account-row" onclick="selectGoogleAccount('guest@gmail.com', 'Guest User')" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; text-align: left; transition: background 0.2s; border-bottom: 1px solid #f1f3f4; background: #ffffff;">
+                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #f1f3f4; color: #5f6368; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem;">G</div>
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="font-size: 0.85rem; font-weight: 600; color: #3c4043;">Guest User</span>
+                        <span style="font-size: 0.75rem; color: #5f6368;">guest@gmail.com</span>
+                    </div>
+                </div>
+
+                <!-- Account 3 (Create new / simulate custom input) -->
+                <div class="google-account-row" onclick="promptCustomGoogleAccount()" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; text-align: left; transition: background 0.2s; background: #ffffff;">
+                    <div style="width: 32px; height: 32px; border-radius: 50%; border: 1px dashed #dadce0; display: flex; align-items: center; justify-content: center; color: #1a73e8; font-size: 1rem; background: #ffffff;"><i class="fa-solid fa-user-plus" style="font-size: 0.8rem;"></i></div>
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="font-size: 0.85rem; font-weight: 600; color: #1a73e8;">Use another account</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Google Client ID Configuration -->
+            <div style="border-top: 1px solid #dadce0; padding-top: 16px; margin-top: 8px; text-align: left; margin-bottom: 18px;">
+                <label style="font-family: inherit; font-size: 0.75rem; font-weight: 700; color: #5f6368; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.3px;">Connect Your Real Google Account</label>
+                <p style="font-size: 0.6875rem; color: #5f6368; line-height: 1.3; margin-bottom: 8px;">To sign in with actual Google accounts logged in on your browser or device, enter your Google OAuth Client ID:</p>
+                <div style="display: flex; gap: 6px;">
+                    <input type="text" id="googleClientIdInput" placeholder="e.g. 123456-abc.apps.googleusercontent.com" style="flex: 1; padding: 8px 10px; border: 1px solid #dadce0; border-radius: 6px; font-size: 0.75rem; outline: none; font-family: inherit; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); color: #202124;">
+                    <button type="button" onclick="saveGoogleClientId()" style="padding: 8px 12px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.2s;">Save</button>
+                </div>
+                <span id="googleClientIdStatus" style="font-size: 0.65rem; color: #34a853; margin-top: 6px; display: block; font-weight: 600;"></span>
+            </div>
+
+            <div style="text-align: left; font-size: 0.75rem; color: #5f6368; line-height: 1.4;">
+                To continue, Google will share your name, email address, language preference and profile picture with Tracify.
+            </div>
+            
+            <button type="button" onclick="closeGoogleAuthModal()" style="margin-top: 20px; padding: 8px 16px; border: 1px solid #dadce0; border-radius: 4px; background: #ffffff; color: #1a73e8; font-size: 0.85rem; font-weight: 600; cursor: pointer; font-family: inherit; width: fit-content; align-self: center;">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Custom Toast notifications container -->
+    <div id="toast-container"></div>
+
+    <script src="script.js?v=3.0.1"></script>
+</body>
+</html>
