@@ -107,6 +107,11 @@ function initApp() {
             initRealGoogleSignIn();
         });
     }
+
+    // 11. Add a diagnostic click logger to help verify click targets in browser dev tools
+    document.addEventListener("click", (e) => {
+        console.log("Tracify Clicked Element Target:", e.target);
+    });
 }
 
 // ----------------------------------------------------
@@ -247,9 +252,11 @@ function toggleSidebar(open) {
     if (open) {
         sidebar.classList.add("open");
         overlay.classList.add("active");
+        document.body.classList.add("sidebar-open");
     } else {
         sidebar.classList.remove("open");
         overlay.classList.remove("active");
+        document.body.classList.remove("sidebar-open");
     }
 }
 
@@ -485,6 +492,11 @@ function selectTask(id) {
     const task = tasks[id];
     if (task) {
         showToast(`Loaded "${task.name}"`, "info");
+    }
+
+    // Auto-close sidebar on mobile devices for seamless navigation
+    if (window.innerWidth <= 768) {
+        toggleSidebar(false);
     }
 }
 
@@ -1282,6 +1294,11 @@ function handleFormSubmit(e) {
     closeModal();
     renderTaskList();
     renderDashboard();
+    
+    // Auto-close sidebar on mobile devices for seamless navigation
+    if (window.innerWidth <= 768) {
+        toggleSidebar(false);
+    }
 }
 
 // ----------------------------------------------------
@@ -1465,6 +1482,11 @@ function handleRegisterSubmit(e) {
     updateUserProfileUI();
     renderTaskList();
     renderDashboard();
+
+    // Auto-close sidebar on mobile devices for seamless navigation
+    if (window.innerWidth <= 768) {
+        toggleSidebar(false);
+    }
 }
 
 function handleLoginSubmit(e) {
@@ -1499,6 +1521,11 @@ function handleLoginSubmit(e) {
     updateUserProfileUI();
     renderTaskList();
     renderDashboard();
+
+    // Auto-close sidebar on mobile devices for seamless navigation
+    if (window.innerWidth <= 768) {
+        toggleSidebar(false);
+    }
 }
 
 function handleLogout() {
@@ -1514,6 +1541,11 @@ function handleLogout() {
     updateUserProfileUI();
     renderTaskList();
     renderDashboard();
+
+    // Auto-close sidebar on mobile devices for seamless navigation
+    if (window.innerWidth <= 768) {
+        toggleSidebar(false);
+    }
 }
 
 // ----------------------------------------------------
@@ -1619,6 +1651,11 @@ function selectGoogleAccount(email, fullname) {
         updateUserProfileUI();
         renderTaskList();
         renderDashboard();
+
+        // Auto-close sidebar on mobile devices for seamless navigation
+        if (window.innerWidth <= 768) {
+            toggleSidebar(false);
+        }
     }, 1500);
 }
 
@@ -1685,6 +1722,11 @@ function handleRealGoogleCredential(response) {
         updateUserProfileUI();
         renderTaskList();
         renderDashboard();
+
+        // Auto-close sidebar on mobile devices for seamless navigation
+        if (window.innerWidth <= 768) {
+            toggleSidebar(false);
+        }
         
     } catch (e) {
         console.error("Failed to decode Google Token:", e);

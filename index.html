@@ -8,9 +8,60 @@
     <title>Tracify - Track everything and build momentum daily</title>
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="style.css?v=3.0.1">
+    <link rel="stylesheet" href="style.css?v=3.0.6">
     <!-- Official Google Identity Services SDK -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        /* Failsafe Mobile Stacking & Layout Overrides to prevent cache issues */
+        @media (max-width: 768px) {
+            .mobile-topbar {
+                display: flex !important;
+                z-index: 99 !important;
+                position: sticky !important;
+                top: 0 !important;
+                height: 56px !important;
+                box-sizing: border-box !important;
+            }
+            .sidebar {
+                position: fixed !important;
+                top: 56px !important;
+                left: 0 !important;
+                height: calc(100vh - 56px) !important;
+                width: 78% !important;
+                max-width: 320px !important;
+                z-index: 99999 !important;
+                pointer-events: auto !important;
+                opacity: 1 !important;
+                transform: translate3d(-100%, 0, 0) !important;
+                will-change: transform !important;
+                border-radius: 0 24px 24px 0 !important;
+                filter: none !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+                transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease !important;
+            }
+            .sidebar.open {
+                transform: translate3d(0, 0, 0) !important;
+                opacity: 1 !important;
+            }
+            .sidebar-overlay {
+                display: none !important;
+                position: fixed !important;
+                top: 56px !important;
+                left: 0 !important;
+                width: 100vw !important;
+                height: calc(100vh - 56px) !important;
+                background: rgba(0, 0, 0, 0.6) !important;
+                filter: none !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+                z-index: 99990 !important;
+            }
+            .sidebar-overlay.active {
+                display: block !important;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -24,11 +75,11 @@
     <!-- Interactive Mouse spotlight tracker -->
     <div id="mouse-glow"></div>
 
-    <!-- Mobile Screen backdrop Drawer overlay -->
-    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar(false)"></div>
-
     <!-- Core App Container -->
     <div class="app-container">
+
+        <!-- Mobile Screen backdrop Drawer overlay -->
+        <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar(false)"></div>
 
         <!-- Responsive Dashboard Sidebar Drawer -->
         <aside class="sidebar" id="sidebar">
@@ -612,6 +663,6 @@
     <!-- Custom Toast notifications container -->
     <div id="toast-container"></div>
 
-    <script src="script.js?v=3.0.1"></script>
+    <script src="script.js?v=3.0.7"></script>
 </body>
 </html>
